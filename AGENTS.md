@@ -19,4 +19,4 @@ This is a local macOS Uniden BCD325P2 programmer, not a frequency database. Star
 - Do not add erase/reset/delete or automatic hardware writes as an incidental change. Preserve unrelated existing systems and quick keys.
 - Run `npm test`, `npm run check` and `npm run release:check`. For UI changes, run the documented browser checks and inspect desktop/mobile screenshots. Tests must check observable behavior, not only source text.
 - Use synthetic fixtures. A successful original-core hardware test is not proof that a changed application has passed hardware testing.
-- Keep this repository private. Publishing, changing repository visibility or enabling public hosting requires a new explicit user instruction. A private push is already authorized for this project.
+- This repository is public. Review every pushed file and commit for private data. Requested code fixes and documentation cleanup may be committed and pushed after checks pass. Package publication, release tags and public hosting require an explicit maintainer instruction.

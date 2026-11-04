@@ -1,6 +1,6 @@
-# Preparing a public release
+# Maintaining public releases
 
-The 0.1.0 candidate is experimental. Preparing source and pushing to a private repository do not publish it. A maintainer must explicitly approve the visibility change.
+The repository is public as an experimental 0.1.0 preview. Code pushed to its branches is publicly visible. Versioned release tags, npm publication and public hosting remain separate maintainer decisions.
 
 ## Candidate checks
 
@@ -23,7 +23,7 @@ An experimental public preview must retain these limitations prominently in the 
 
 ## Publication decision
 
-After reviewing the candidate, the maintainer can approve a public experimental preview or wait for the additional hardware test. Changing GitHub visibility is a separate action from the checks above. Review repository access and enable GitHub private vulnerability reporting when making the repository public. Keep the local service bound to loopback; this software does not need public hosting.
+After reviewing a candidate, the maintainer can approve a tagged experimental release or wait for additional hardware evidence. Keep repository access and private vulnerability reporting configured appropriately. Keep the local service bound to loopback; this software does not need public hosting.
 
 Suggested repository description:
 

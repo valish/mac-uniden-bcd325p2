@@ -33,6 +33,8 @@ Keep the same source plan and private data directory. Reconnect, load the plan, 
 
 Recovery refuses changed names, frequencies, IDs, unexpected extra records, a different firmware, or an unrecorded allocation. If a device allocation succeeded but its reply or the following receipt save was lost, automatic recovery may be impossible. The snapshot and transcript help a maintainer inspect that exact state. Do not repeatedly retry an uncertain allocation or reset the whole scanner.
 
+Verified recovery assignments keep their existing quick keys, even when all 100 keys are occupied. Recovery stops before writes if another system now shares one of those keys or duplicates a managed system name. Review that conflict on the scanner before trying again.
+
 A stop request completes the outstanding command, then attempts to leave Remote Mode. A disconnected cable or failed transport may prevent that final command; power the scanner off/on if Remote Mode remains on screen.
 
 The snapshot is raw diagnostic JSON. It is **not** a ProScan file, a FreeSCAN file, or a one-click restoration backup. Preserve the original software’s native backup too when available.
@@ -57,6 +59,6 @@ Do not install an obsolete unsigned scanner driver or change Mac security settin
 
 During scanning, a one-digit system quick key toggles that system. For a two-digit key, press **./no** and then both digits. Group quick keys control groups within the current system. A source plan’s preferred keys can differ from actual allocated keys.
 
-Print the plan after upload or verification to capture actual assignments. The print reference includes channel labels, full names, frequencies/talkgroups, sites, sources and exclusions.
+Print the plan after upload or verification to capture actual assignments. The print reference includes channel labels, full names, frequencies/talkgroups, sites, sources, exclusions and notes. Documented tone/NAC values in notes are reference information; this version still programs analog tone off and conventional P25 NAC Search.
 
 Keep NOAA and broadcast FM separate from incident scanning because continuous signals can hold scanning. This app does not configure SAME alert standby. A programmed frequency is not evidence of current traffic or local reception.

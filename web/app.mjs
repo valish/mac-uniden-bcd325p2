@@ -13,6 +13,7 @@ let session,
   lastSession,
   validationWarnings = [],
   busy = false,
+  planLoading = false,
   brief = '';
 const messages = [];
 const text = (tag, value, className) => {
@@ -76,37 +77,46 @@ async function copy(value) {
 }
 function controls() {
   const connected = Boolean(transport && !transport.closed);
-  $('connect').disabled = busy || connected || !session || !navigator.serial;
-  for (const id of ['backup', 'disconnect']) $(id).disabled = busy || !connected;
-  $('verify').disabled = busy || !connected || !compiled;
+  const locked = busy || planLoading;
+  $('connect').disabled = locked || connected || !session || !navigator.serial;
+  for (const id of ['backup', 'disconnect']) $(id).disabled = locked || !connected;
+  $('verify').disabled = locked || !connected || !compiled;
   $('program').disabled =
-    busy || !connected || !compiled || compiled.example || !$('reviewed').checked || !enabled.size;
+    locked ||
+    !connected ||
+    !compiled ||
+    compiled.example ||
+    !$('reviewed').checked ||
+    !enabled.size;
   $('stop').disabled = !busy || !programmer;
-  for (const id of ['import', 'example', 'add-channel', 'edit-json', 'reviewed'])
-    $(id).disabled = busy;
-  for (const input of document.querySelectorAll('[data-system]')) input.disabled = busy;
+  for (const id of ['import', 'file', 'example', 'add-channel', 'edit-json', 'reviewed'])
+    $(id).disabled = locked;
+  for (const input of document.querySelectorAll('[data-system], #inbox button'))
+    input.disabled = locked;
   $('upload-title').textContent = compiled?.title || 'No plan selected';
   $('upload-summary').textContent = compiled
     ? `${countLabel(compiled.counts.conventional, 'channel')} · ${countLabel(compiled.counts.talkgroups, 'talkgroup')} · ${countLabel(compiled.counts.sites, 'site')}. ${countLabel(enabled.size, 'system')} selected for initial listening.`
     : 'Import or prepare a plan, then review it before programming.';
-  $('upload-reason').textContent = busy
-    ? 'Working. Keep the cable and local server connected.'
-    : !connected
-      ? 'Connect the scanner to continue.'
-      : !compiled
-        ? 'Load a listening plan first.'
-        : compiled.example
-          ? 'This is an example. Research and adapt it, then remove the example flag before programming.'
-          : !$('reviewed').checked
-            ? 'Review the plan and check the review confirmation on the Listening plan screen.'
-            : !enabled.size
-              ? 'Select at least one system for initial listening.'
-              : 'Ready. The upload preserves existing systems and verifies saved records.';
+  $('upload-reason').textContent = planLoading
+    ? 'Loading the plan. Wait before starting a scanner operation.'
+    : busy
+      ? 'Working. Keep the cable and local server connected.'
+      : !connected
+        ? 'Connect the scanner to continue.'
+        : !compiled
+          ? 'Load a listening plan first.'
+          : compiled.example
+            ? 'This is an example. Research and adapt it, then remove the example flag before programming.'
+            : !$('reviewed').checked
+              ? 'Review the plan and check the review confirmation on the Listening plan screen.'
+              : !enabled.size
+                ? 'Select at least one system for initial listening.'
+                : 'Ready. The upload preserves existing systems and verifies saved records.';
   $('connection-chip').textContent = connected ? 'Scanner connected' : 'Not connected';
   $('connection-chip').classList.toggle('connected', connected);
 }
 async function run(fn) {
-  if (busy) return;
+  if (busy || planLoading) return;
   if (programmer) programmer.cancelled = false;
   busy = true;
   controls();
@@ -144,24 +154,31 @@ async function run(fn) {
   }
 }
 async function usePlan(input, { persist = true } = {}) {
-  if (busy) throw Error('Finish the scanner operation before changing plans');
-  const result = await compilePlan(input);
-  if (persist) await api('/api/stage', { plan: input });
-  sourcePlan = structuredClone(input);
-  compiled = result.plan;
-  validationWarnings = result.warnings;
-  actualKeys = null;
-  enabled = new Set(compiled.systems.filter((s) => s.enabled).map((s) => s.name));
-  $('reviewed').checked = false;
-  renderPlan(result.warnings);
+  if (busy || planLoading) throw Error('Finish the current operation before changing plans');
+  planLoading = true;
   controls();
-  view('plan');
-  if (persist) await refreshPlans();
-  showNotice(
-    input.example
-      ? 'Example loaded for preview. Adapt it to your area before programming.'
-      : 'Plan validated. Review sources and choose the systems to enable.',
-  );
+  try {
+    const result = await compilePlan(input);
+    if (persist) await api('/api/stage', { plan: input });
+    sourcePlan = structuredClone(input);
+    compiled = result.plan;
+    validationWarnings = result.warnings;
+    actualKeys = null;
+    enabled = new Set(compiled.systems.filter((s) => s.enabled).map((s) => s.name));
+    $('reviewed').checked = false;
+    renderPlan(result.warnings);
+    controls();
+    view('plan');
+    if (persist) await refreshPlans();
+    showNotice(
+      input.example
+        ? 'Example loaded for preview. Adapt it to your area before programming.'
+        : 'Plan validated. Review sources and choose the systems to enable.',
+    );
+  } finally {
+    planLoading = false;
+    controls();
+  }
 }
 function countLabel(count, noun) {
   return `${count} ${noun}${count === 1 ? '' : 's'}`;
@@ -222,7 +239,7 @@ function renderPlan(warnings = validationWarnings) {
     $('warnings').append(list);
   }
   $('systems').replaceChildren();
-  for (const s of compiled.systems) {
+  for (const [systemOffset, s] of compiled.systems.entries()) {
     const card = text('div', '', 'system-card'),
       check = document.createElement('input'),
       label = document.createElement('label');
@@ -243,6 +260,8 @@ function renderPlan(warnings = validationWarnings) {
         )}${s.sites ? ` · ${countLabel(s.sites.length, 'site')}` : ''}`,
       ),
     );
+    const notes = sourcePlan.systems[systemOffset].notes;
+    if (notes) label.append(text('small', `Note: ${notes}`));
     check.addEventListener('change', () => {
       if (check.checked) enabled.add(s.name);
       else enabled.delete(s.name);
@@ -277,14 +296,15 @@ function renderPlan(warnings = validationWarnings) {
     );
   if (sourcePlan.excluded?.length) {
     $('sources').append(text('h3', 'Excluded from this plan'));
-    for (const e of sourcePlan.excluded) $('sources').append(text('p', `${e.name}: ${e.reason}`));
+    for (const e of sourcePlan.excluded)
+      $('sources').append(text('p', `${e.name}: ${e.reason}${e.notes ? ` — ${e.notes}` : ''}`));
   }
 }
 function renderChannels() {
   if (!compiled) return;
   $('channel-list').replaceChildren();
   const filter = $('filter').value.toLowerCase().trim();
-  for (const s of compiled.systems) {
+  for (const [systemOffset, s] of compiled.systems.entries()) {
     const details = document.createElement('details');
     details.open = true;
     details.append(
@@ -297,13 +317,17 @@ function renderChannels() {
       head.append(text('th', title));
     const body = table.createTBody();
     let rows = 0;
-    const add = (name, label, value, mode, group, refs) => {
-      if (filter && !`${name} ${label} ${value} ${mode} ${group}`.toLowerCase().includes(filter))
+    const add = (name, label, value, mode, group, refs, notes = '') => {
+      if (
+        filter &&
+        !`${name} ${label} ${value} ${mode} ${group} ${notes}`.toLowerCase().includes(filter)
+      )
         return;
       rows++;
       const row = body.insertRow(),
         a = text('td', name);
       if (label !== name) a.append(text('small', label));
+      if (notes) a.append(text('small', `Note: ${notes}`));
       row.append(a, text('td', value, 'frequency'), text('td', mode));
       const last = text('td', group);
       for (const id of refs) {
@@ -328,8 +352,9 @@ function renderChannels() {
           c.audio === '2' ? 'P25' : c.modulation,
           g.fullName,
           c.sourceIds,
+          c.notes,
         );
-    for (const site of s.sites || [])
+    for (const [siteOffset, site] of (s.sites || []).entries())
       for (const f of site.frequencies)
         add(
           site.fullName,
@@ -338,6 +363,7 @@ function renderChannels() {
           'P25 site',
           'Control / alternate',
           site.sourceIds,
+          sourcePlan.systems[systemOffset].sites[siteOffset].notes,
         );
     if (rows) {
       wrap.append(table);
@@ -370,7 +396,7 @@ async function refreshPlans() {
         `${p.counts.conventional} channels · ${p.counts.talkgroups} talkgroups${p.example ? ' · Example' : ''}`,
       ),
     );
-    button.disabled = busy;
+    button.disabled = busy || planLoading;
     button.onclick = () =>
       api('/api/record?file=' + encodeURIComponent(p.file))
         .then((d) => usePlan(d.input, { persist: false }))

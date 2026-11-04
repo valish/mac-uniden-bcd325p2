@@ -44,6 +44,8 @@ Before memory allocation, the app must save and verify a snapshot on disk. Recei
 
 On retry, the server derives a recovery ticket from a matching incomplete receipt. Only recorded systems whose current content matches a prefix of the plan can be resumed. Unknown, changed or ambiguously allocated content stops the attempt. Completed receipts suppress automatic recovery for that plan.
 
+The key allocator reserves verified recovery assignments before choosing keys for new systems. A managed key shared with an unrelated system, or duplicate managed system names, stops recovery before setters or allocations. Both the source validator and wire-plan validator enforce per-system channel limits; malformed memory-count responses cannot bypass capacity checks.
+
 The app is append/resume oriented. It is not a transactional scanner filesystem, and power or cable loss can leave partial records. The raw backup has no automated restore implementation.
 
 ## Local trust boundary

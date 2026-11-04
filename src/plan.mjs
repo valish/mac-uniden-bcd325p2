@@ -168,6 +168,14 @@ export function inspectPlan(input) {
       fail(`${path}.sites`, 'conventional systems do not have trunk sites');
     if (s.type === 'P25S' && !s.sites?.length)
       fail(`${path}.sites`, 'P25 Standard requires at least one site');
+    // The model's Main Features specify these limits per system, across groups.
+    const systemChannels = s.groups.reduce((n, g) => n + g.channels.length, 0);
+    const systemLimit = s.type === 'CNV' ? 1000 : 500;
+    if (systemChannels > systemLimit)
+      fail(
+        `${path}.groups`,
+        `maximum ${systemLimit} ${s.type === 'CNV' ? 'conventional channels' : 'talkgroups'} per system, across all groups`,
+      );
     const groupNames = new Set();
     for (const [j, g] of s.groups.entries()) {
       const gp = `${path}.groups[${j}]`;

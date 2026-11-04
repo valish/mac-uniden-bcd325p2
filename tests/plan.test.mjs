@@ -104,6 +104,28 @@ test('enforces per-group limits and at least one group', () => {
   p.systems[1].groups = [];
   assert.equal(inspectPlan(p).valid, false);
 });
+test('enforces total conventional and talkgroup limits across groups in one system', async () => {
+  for (const [systemIndex, limit] of [
+    [0, 1000],
+    [1, 500],
+  ]) {
+    const p = clone();
+    const s = p.systems[systemIndex];
+    const channels = Array.from({ length: limit }, (_, i) => ({
+      name: `Channel ${i}`,
+      ...(systemIndex === 0
+        ? { frequencyMHz: `155.${String(i).padStart(4, '0')}`, mode: 'NFM' }
+        : { tgid: i + 1, encryption: 'clear' }),
+    }));
+    s.groups = [
+      { name: 'First half', quickKey: 1, channels: channels.slice(0, limit / 2) },
+      { name: 'Second half', quickKey: 2, channels: channels.slice(limit / 2) },
+    ];
+    await compilePlan(p);
+    s.groups[1].channels.push({ ...channels[0], name: 'Extra channel' });
+    await assert.rejects(compilePlan(p), /per system/);
+  }
+});
 test('CSV supports quoted fields, embedded newlines and exact conventional settings', async () => {
   const simple =
     'system,group,name,frequency_mhz,mode,quick_key,group_key,enabled\r\nLocal,Main,"Fire, dispatch",155.1000,NFM,1,1,true\r\n';

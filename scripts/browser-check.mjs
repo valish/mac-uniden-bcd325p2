@@ -82,7 +82,13 @@ try {
   await page.locator('#connection-chip.connected').waitFor();
   assert.equal(await page.locator('#program').isDisabled(), true);
   await page.locator('[data-view=plan]').click();
-  const synthetic = await fs.readFile(path.join(ROOT, 'tests/fixtures/plan.json'));
+  const fixture = JSON.parse(
+    await fs.readFile(path.join(ROOT, 'tests/fixtures/plan.json'), 'utf8'),
+  );
+  fixture.systems[0].notes = 'System coverage note';
+  fixture.systems[0].groups[0].channels[0].notes = 'Confirm repeater output';
+  fixture.systems[1].sites[0].notes = 'Site coverage note';
+  const synthetic = Buffer.from(JSON.stringify(fixture));
   await page.locator('#file').setInputFiles({
     name: 'synthetic-plan.json',
     mimeType: 'application/json',
@@ -110,6 +116,48 @@ try {
   );
   assert.equal(await page.locator('#reviewed').isChecked(), false);
   await firstSystem.locator('input').setChecked(originalState);
+  await page.locator('#reviewed').check();
+  assert.ok((await page.locator('#systems').textContent()).includes('System coverage note'));
+  await page.locator('#filter').fill('Confirm repeater output');
+  assert.equal(await page.locator('#channel-list tbody tr').count(), 1);
+  await page.locator('#filter').fill('');
+  // Hold staging open while a reviewed, programmable plan is already loaded.
+  // Starting a scanner operation here must not race the replacement plan.
+  let releaseStage;
+  const gate = new Promise((resolve) => {
+    releaseStage = resolve;
+  });
+  const stageHandler = async (route) => {
+    await gate;
+    await route.continue();
+  };
+  await page.route('**/api/stage', stageHandler);
+  const staging = page.waitForRequest(
+    (r) => r.url().endsWith('/api/stage') && r.method() === 'POST',
+  );
+  await page
+    .locator('#file')
+    .setInputFiles({
+      name: 'synthetic-plan.json',
+      mimeType: 'application/json',
+      buffer: synthetic,
+    });
+  await staging;
+  try {
+    assert.equal(await page.locator('#program').isDisabled(), true);
+    assert.equal(await page.locator('#verify').isDisabled(), true);
+    assert.equal(await page.locator('#reviewed').isDisabled(), true);
+    const before = await page.evaluate(() => window.__testRadio.commands.length);
+    await page.locator('#program').dispatchEvent('click');
+    assert.equal(await page.evaluate(() => window.__testRadio.commands.length), before);
+  } finally {
+    releaseStage();
+  }
+  await page.waitForFunction(
+    () =>
+      !document.querySelector('#reviewed').checked && !document.querySelector('#reviewed').disabled,
+  );
+  await page.unroute('**/api/stage', stageHandler);
   await page.locator('#reviewed').check();
   await page.screenshot({ path: path.join(artifacts, '03-plan-desktop.png'), fullPage: true });
   await page.locator('[data-view=scanner]').click();
@@ -169,6 +217,8 @@ try {
   assert.equal(await page.locator('#sources-panel').evaluate((node) => node.open), true);
   await page.emulateMedia({ media: 'print' });
   assert.equal(await firstSystem.locator('.scan-state').isVisible(), true);
+  for (const note of ['System coverage note', 'Confirm repeater output', 'Site coverage note'])
+    assert.equal(await page.getByText(`Note: ${note}`, { exact: true }).first().isVisible(), true);
   await page.pdf({
     path: path.join(artifacts, 'field-reference.pdf'),
     format: 'Letter',
@@ -229,6 +279,8 @@ try {
       'local font loading and keyboard skip link',
       'scan selection labels on screen and print',
       'review warnings identify channels by name',
+      'plan staging blocks concurrent scanner operations',
+      'system/channel/site notes visible in review, search and print',
       'public screenshots contain only example/synthetic data',
       'no page errors',
     ],

@@ -105,4 +105,6 @@ CSV is conventional-only. Use JSON for sites, talkgroups, multiple source links,
 
 ## Capacity
 
-The planner checks 500 systems, 1,000 internal sites (including one per conventional system), 256 trunk sites per system, 20 groups per system, 1,000 conventional channels or 500 talkgroups per group, and 25,000 total channel/frequency records. The scanner’s existing memory is checked before allocation. A plan that fits by itself may not fit alongside existing systems.
+The planner checks 500 systems, 1,000 internal sites (including one per conventional system), 256 trunk sites per system, 20 groups per system, and 25,000 total channel/frequency records. Conventional systems are limited to 1,000 channels across all their groups; P25 systems are limited to 500 talkgroups across all their groups. These system limits follow the [BCD325P2 manual’s Main Features](https://www.uniden.info/download/ompdf/BCD325P2om.pdf#page=11) and Uniden’s [Edit Channel reference](https://info.uniden.com/twiki/bin/view/UnidenMan4/EditChannel).
+
+System quick keys are unique within a plan, so this format can assign at most 100 systems even though the scanner can store 500. Existing memory counts are validated before allocation. A plan that fits by itself may not fit alongside existing systems.

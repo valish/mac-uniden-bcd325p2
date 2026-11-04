@@ -1,6 +1,15 @@
 # Changelog
 
-## 0.1.0 — release candidate
+## Unreleased
+
+- Reuse verified recovery quick keys without requiring spare keys. Refuse recovery if an unrelated system shares a managed key or duplicates a managed name.
+- Reject invalid scanner memory counts before writes.
+- Enforce the 1,000 conventional-channel and 500-talkgroup limits across all groups in each system.
+- Block scanner operations while a replacement plan is loading or being saved.
+- Show system, channel, site and exclusion notes in review/print; include channel and site notes in search.
+- Update contributor and release instructions for the public repository.
+
+## 0.1.0 — public preview
 
 - Local BCD325P2 programming through desktop Chrome Web Serial on macOS.
 - Portable, source-linked JSON plans; conventional CSV import and manual entry.

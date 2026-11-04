@@ -208,6 +208,110 @@ test('resuming a partial P25 system accounts for its missing sites before writin
   );
   assert.ok(!radio.commands.some((c) => /^(CSY|AGC|AGT|ACC|ACT|AST),/.test(c)));
 });
+test('recovery reuses owned quick keys when all 100 keys are occupied', async () => {
+  const { radio, p: old } = setup();
+  radio.fail = (command) => command.startsWith('QSL,');
+  await assert.rejects(old.install(plan), /rejected QSL/);
+  radio.fail = null;
+  const resume = ticket(old.receipt);
+  const owned = new Set(resume.systems.map((s) => s.quickKey));
+  await radio.exchange('PRG');
+  for (let key = 0; key < 100; key++) {
+    if (owned.has(key)) continue;
+    const id = Number((await radio.exchange('CSY,CNV,0')).split(',')[1]);
+    await radio.exchange(setCommand('SIN', id, { name: `Existing ${key}`, quickKey: key }));
+  }
+  await radio.exchange('EPG');
+  radio.commands = [];
+  const { p } = setup(radio);
+  const receipt = await p.install({ ...plan, resume });
+  assert.equal(receipt.status, 'complete');
+  assert.deepEqual(receipt.quickKeys, old.receipt.quickKeys);
+  assert.equal(radio.systems.length, 100);
+  assert.ok(!radio.commands.some((c) => /^(CSY|AGC|AGT|ACC|ACT|AST),/.test(c)));
+});
+test('recovery rejects keys shared with unrelated systems before any writes', async () => {
+  const { radio, p: old } = setup();
+  radio.fail = (command) => command.startsWith('QSL,');
+  await assert.rejects(old.install(plan), /rejected QSL/);
+  radio.fail = null;
+  await radio.exchange('PRG');
+  const id = Number((await radio.exchange('CSY,CNV,0')).split(',')[1]);
+  await radio.exchange(setCommand('SIN', id, { name: 'Unrelated', quickKey: 1 }));
+  await radio.exchange('EPG');
+  radio.pages[0] = '2' + radio.pages[0].slice(1);
+  const originalKeys = [...radio.pages];
+  radio.commands = [];
+  const { p } = setup(radio);
+  await assert.rejects(p.install({ ...plan, resume: ticket(old.receipt) }), /shared.*Unrelated/);
+  assert.deepEqual(radio.pages, originalKeys);
+  assert.ok(
+    !radio.commands.some((c) =>
+      /^(CSY|AGC|AGT|ACC|ACT|AST),|^(SIN|SIF|GIN|CIN|TIN|TFQ|TRN|QGL|QSL),[^,]+,/.test(c),
+    ),
+  );
+});
+test('invalid memory counts stop before writes instead of bypassing capacity checks', async () => {
+  for (const [slot, value] of [
+    [3, 'unknown'],
+    [4, ''],
+    [4, '-1'],
+    [3, '1001'],
+  ]) {
+    const { radio, p } = setup();
+    const exchange = radio.exchange.bind(radio);
+    radio.exchange = async (command) => {
+      const response = await exchange(command);
+      if (command !== 'MEM') return response;
+      const fields = response.split(',');
+      fields[slot] = value;
+      return fields.join(',');
+    };
+    await assert.rejects(p.install(plan), /Invalid scanner memory counts/);
+    assert.equal(radio.systems.length, 0);
+    assert.equal(radio.program, false);
+  }
+});
+test('wire plans cannot bypass per-system limits before scanner access', async () => {
+  for (const [systemIndex, count, field] of [
+    [0, 1001, 'conventional'],
+    [1, 501, 'talkgroups'],
+  ]) {
+    const oversized = structuredClone(plan);
+    const s = oversized.systems[systemIndex];
+    const sample = s.groups[0].channels[0];
+    const channels = Array.from({ length: count }, (_, i) => ({ ...sample, name: `Channel ${i}` }));
+    s.groups = [
+      { name: 'First half', quickKey: 1, channels: channels.slice(0, count / 2) },
+      { name: 'Second half', quickKey: 2, channels: channels.slice(count / 2) },
+    ];
+    oversized.counts[field] = count;
+    const { radio, p } = setup();
+    await assert.rejects(p.install(oversized), /per system/);
+    assert.equal(radio.commands.length, 0);
+  }
+});
+test('duplicate managed names in recovery are refused before channel writes', async () => {
+  const { radio, p: old } = setup();
+  radio.fail = (command) => command.startsWith('QSL,');
+  await assert.rejects(old.install(plan), /rejected QSL/);
+  radio.fail = null;
+  await radio.exchange('PRG');
+  const id = Number((await radio.exchange('CSY,CNV,0')).split(',')[1]);
+  await radio.exchange(setCommand('SIN', id, { name: plan.systems[0].name, quickKey: 9 }));
+  await radio.exchange('EPG');
+  radio.commands = [];
+  const { p } = setup(radio);
+  await assert.rejects(
+    p.install({ ...plan, resume: ticket(old.receipt) }),
+    /Matching system names/,
+  );
+  assert.ok(
+    !radio.commands.some((c) =>
+      /^(CSY|AGC|AGT|ACC|ACT|AST),|^(SIN|SIF|GIN|CIN|TIN|TFQ|TRN|QGL|QSL),[^,]+,/.test(c),
+    ),
+  );
+});
 test('protected and cyclic existing systems stop before any additions', async () => {
   for (const problem of ['protected', 'cycle']) {
     const { radio, p } = setup();

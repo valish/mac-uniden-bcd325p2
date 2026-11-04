@@ -1,6 +1,6 @@
 # Contributing
 
-The project is experimental. Keep compatibility claims tied to the evidence in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). Repository visibility, package publication and public hosting require an explicit maintainer release decision.
+This public project is experimental. Keep compatibility claims tied to the evidence in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). Package publication, release tags and public hosting require an explicit maintainer release decision.
 
 ## Run and test
 
@@ -43,8 +43,8 @@ The script also captures `artifacts/public-preview/` using only the included wea
 - Do not include `.local/`, session records, downloaded vendor manuals, API keys, personal plans or data from the originating emergency workspace.
 - Keep compatibility claims scoped to actual evidence.
 
-## Public release gate
+## Before a tagged release
 
-A private push is not a public release. Before publishing: complete the standalone browser/visual checks and a physical-device workflow, review licensing/provenance, test installation from a clean checkout, inspect the exact tracked-file inventory and Git history, and explicitly decide to change visibility. Record hardware results in `docs/COMPATIBILITY.md` without publishing private evidence.
+Complete automated and browser/visual checks, review licensing/provenance, test installation from a clean checkout, and inspect the exact tracked-file inventory and Git history. Tie physical-device results to the revision actually tested; passing simulations does not extend an older hardware result to changed protocol code. Record hardware results in `docs/COMPATIBILITY.md` without publishing private evidence.
 
 Follow [docs/RELEASING.md](docs/RELEASING.md). `package.json` deliberately keeps `private: true` to prevent accidental npm publication; that setting does not control GitHub repository visibility.

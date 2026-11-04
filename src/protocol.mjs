@@ -199,6 +199,10 @@ export function validatePlan(plan) {
     keys.add(s.quickKey);
     if (!['CNV', 'P25S'].includes(s.type) || !s.groups.length || s.groups.length > 20)
       throw Error('Invalid system');
+    if (s.groups.reduce((n, g) => n + g.channels.length, 0) > (s.type === 'CNV' ? 1000 : 500))
+      throw Error(
+        `Too many ${s.type === 'CNV' ? 'conventional channels' : 'talkgroups'} per system`,
+      );
     const groupNames = new Set();
     for (const g of s.groups) {
       checkName(g.name);
@@ -267,17 +271,31 @@ export function quickPages(r) {
     throw Error('Invalid quick-key state');
   return r.slice(1).map((s) => s.split(''));
 }
-export function chooseKeys(plan, qsl) {
+export function chooseKeys(plan, qsl, reserved = {}) {
   const pages = quickPages(qsl),
     result = {},
     used = new Set();
+  // A verified recovery receipt already owns these keys. Do not allocate
+  // temporary replacements for them: there may be no spare keys at all.
+  for (const [name, key] of Object.entries(reserved)) {
+    if (
+      !plan.systems.some((s) => s.name === name) ||
+      !Number.isInteger(key) ||
+      key < 0 ||
+      key > 99 ||
+      used.has(key)
+    )
+      throw Error('Invalid or conflicting recovery quick keys');
+    result[name] = key;
+    used.add(key);
+  }
   const free = (key) => {
     const [p, i] = quickPosition(key);
     return pages[p][i] === '0' && !used.has(key);
   };
   // Reserve every available preferred key before allocating alternatives.
   for (const s of plan.systems)
-    if (free(s.quickKey)) {
+    if (result[s.name] === undefined && free(s.quickKey)) {
       result[s.name] = s.quickKey;
       used.add(s.quickKey);
     }
@@ -391,6 +409,14 @@ export class Programmer {
     };
     for (const c of ['MEM', 'RMB', 'QSL', 'WXS', 'PRI', 'SCN'])
       result.globals[c] = await this.ask(c);
+    const memory = result.globals.MEM;
+    if (
+      memory.length < 6 ||
+      [100, 500, 1000, 25000, 1000].some(
+        (limit, i) => !/^\d+$/.test(memory[i + 1]) || Number(memory[i + 1]) > limit,
+      )
+    )
+      throw Error('Invalid scanner memory counts; no upload performed');
     quickPages(result.globals.QSL);
     for (let i = 1; i <= 5; i++) result.globals[`SGP,${i}`] = await this.ask(`SGP,${i}`);
     const head = await this.ask('SIH');
@@ -542,6 +568,18 @@ export class Programmer {
       }
       result.set(expected.name, { snapshot: actual, quickKey: owned.quickKey });
     }
+    const managed = new Set([...result.values()].map((s) => s.snapshot.index));
+    const keys = new Set([...result.values()].map((s) => s.quickKey));
+    for (const system of snapshot.systems) {
+      if (managed.has(system.index)) continue;
+      const assignments =
+        system.raw[1] === 'CNV' ? [system.raw[3]] : (system.sites || []).map((s) => s.raw[3]);
+      for (const key of assignments)
+        if (/^\d{1,2}$/.test(key) && keys.has(Number(key)))
+          throw Error(
+            `Recovery quick key ${key} is shared with unrelated system ${system.name}; no systems were changed`,
+          );
+    }
     return result;
   }
   async install(plan, enabledNames = plan.systems.filter((s) => s.enabled).map((s) => s.name)) {
@@ -572,7 +610,7 @@ export class Programmer {
         receipt.backup = await this.save('backup', before); // Must finish durable write before CSY.
         resumed = this.resumableSystems(plan, before);
         const matches = before.systems.filter((s) => plan.systems.some((p) => p.name === s.name));
-        if (matches.some((s) => !resumed.has(s.name)))
+        if (matches.length !== resumed.size || matches.some((s) => !resumed.has(s.name)))
           throw Error(
             'Matching system names already exist without a matching recovery receipt. Use Verify installed plan or choose a different plan namespace; no duplicates were added.',
           );
@@ -614,10 +652,11 @@ export class Programmer {
             25000
         )
           throw Error('Insufficient scanner memory capacity');
-        receipt.quickKeys = chooseKeys(plan, before.globals.QSL);
-        for (const [name, owned] of resumed) receipt.quickKeys[name] = owned.quickKey;
-        if (new Set(Object.values(receipt.quickKeys)).size !== plan.systems.length)
-          throw Error('Resume quick-key conflict');
+        receipt.quickKeys = chooseKeys(
+          plan,
+          before.globals.QSL,
+          Object.fromEntries([...resumed].map(([name, owned]) => [name, owned.quickKey])),
+        );
         receipt.status = 'writing';
         await this.save('receipt', receipt);
         this.writing = true;
