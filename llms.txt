@@ -1,0 +1,21 @@
+# mac-uniden-bcd325p2
+
+> Unofficial local Uniden BCD325P2 programmer for macOS / Mac OS X. Conventional and P25 Standard plans; browser Web Serial; source-aware LLM-agent workflow; CLI and local stdio MCP. Experimental.
+
+## Start here
+- [Agent guide](docs/AGENT-START.md): research an area, validate and stage a listening plan.
+- [Agent instructions](AGENTS.md): repository and scanner invariants.
+- [Plan schema](schemas/plan.schema.json): portable bcd325p2-plan-v1 format.
+- [Plan reference](docs/PLAN-FORMAT.md): sources, modes, sites, CSV and naming.
+- [Skill](skills/bcd325p2-channel-planning/SKILL.md): reusable task instructions.
+
+## Tools
+- node src/cli.mjs brief --areas "City, County, State"
+- node src/cli.mjs validate plan.json
+- node src/cli.mjs stage plan.json
+- node src/cli.mjs agent-config
+- node src/cli.mjs mcp
+
+MCP tools: scanner_get_schema, scanner_research_brief, scanner_validate_plan, scanner_stage_plan, scanner_list_plans, scanner_read_plan, scanner_session_history.
+
+The project supplies no live frequency database or model API. Use the agent's own current research tools. Hardware programming requires the user's browser connection and Program action. Do not infer success from validation alone. Personal plans and scanner records belong outside version control.

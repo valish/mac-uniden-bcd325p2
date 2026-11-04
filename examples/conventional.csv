@@ -1,0 +1,2 @@
+system,group,name,frequency_mhz,mode,quick_key,group_key,enabled,source_url,source_title,checked
+Weather,NOAA,NOAA 162.550,162.5500,FM,90,1,true,https://www.weather.gov/nwr/,NOAA Weather Radio,2026-11-03

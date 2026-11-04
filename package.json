@@ -1,0 +1,38 @@
+{
+  "name": "mac-uniden-bcd325p2",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local Uniden BCD325P2 programmer for macOS, with Web Serial, agent-ready channel plans, CLI and MCP.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "bcd325p2": "./src/cli.mjs"
+  },
+  "scripts": {
+    "start": "node src/cli.mjs serve --open",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node scripts/check.mjs",
+    "mcp": "node src/cli.mjs mcp",
+    "release:check": "node scripts/release-check.mjs"
+  },
+  "keywords": [
+    "uniden",
+    "bcd325p2",
+    "macos",
+    "mac",
+    "osx",
+    "scanner",
+    "p25",
+    "web-serial",
+    "mcp",
+    "llm",
+    "agent"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/valish/mac-uniden-bcd325p2.git"
+  }
+}

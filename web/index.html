@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Local Uniden BCD325P2 programming for macOS. Prepare source-checked plans with your preferred agent, review channels, back up, program and verify."
+    />
+    <title>BCD325P2 · Mac programmer</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <a href="#main" class="skip">Skip to content</a>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="BCD325P2 programmer home"
+        ><svg viewBox="0 0 28 28" aria-hidden="true">
+          <path d="M5 17V11M11 23V5M17 19V9M23 15V13" /></svg
+        ><span>BCD325P2 <span class="brand-sub">/ Mac programmer</span></span></a
+      ><span class="local-badge"><span class="dot"></span>Local workspace</span>
+    </header>
+    <div class="shell">
+      <aside class="sidebar">
+        <p class="nav-label">WORKSPACE</p>
+        <nav aria-label="Workspace">
+          <button class="nav active" data-view="plan" aria-current="page">
+            <span>01</span> Listening plan</button
+          ><button class="nav" data-view="agent"><span>02</span> Prepare with an agent</button
+          ><button class="nav" data-view="scanner"><span>03</span> Program & verify</button
+          ><button class="nav" data-view="records"><span>04</span> Session records</button
+          ><button class="nav" data-view="guide"><span>05</span> Field reference</button>
+        </nav>
+        <div class="sidebar-foot">
+          <span class="version">EXPERIMENTAL · 0.1.0</span>
+          <p>BCD325P2 only<br />Conventional + P25 Standard</p>
+          <a href="/agent-start" target="_blank" rel="noopener">Agent documentation ↗</a>
+        </div>
+      </aside>
+      <main id="main">
+        <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+        <section id="view-plan" class="view">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">01 / PREPARE & REVIEW</p>
+              <h1>Your listening plan</h1>
+              <p class="lede">Bring the channels. Review the details. Keep the radio yours.</p>
+            </div>
+            <div class="heading-actions">
+              <button id="import" class="primary">
+                Import a plan <span aria-hidden="true">↗</span></button
+              ><input id="file" type="file" accept=".json,.csv,application/json,text/csv" hidden />
+            </div>
+          </div>
+          <div id="empty-plan" class="empty-panel">
+            <div class="empty-symbol" aria-hidden="true">↳</div>
+            <h2>Start with the area you listen to.</h2>
+            <p>
+              Ask your agent to research a plan, import JSON or conventional CSV, or add a channel
+              yourself.
+            </p>
+            <div class="actions">
+              <button data-go="agent" class="primary">Prepare with your agent</button
+              ><button id="example">Explore a weather example</button>
+            </div>
+            <div class="three-steps">
+              <div><b>1. Research</b><span>Current frequencies, sites and sources.</span></div>
+              <div><b>2. Review</b><span>Readable names and deliberate scan defaults.</span></div>
+              <div><b>3. Program</b><span>Back up, upload, then check every record.</span></div>
+            </div>
+          </div>
+          <div id="plan-content" hidden>
+            <div class="plan-title">
+              <div>
+                <span class="tag" id="plan-kind">CHANNEL PLAN</span>
+                <h2 id="plan-title"></h2>
+                <p id="plan-meta" class="muted"></p>
+              </div>
+              <div class="actions">
+                <button id="edit-json">Edit JSON</button
+                ><button id="export-json">Export JSON</button
+                ><button id="print">Print reference</button>
+              </div>
+            </div>
+            <div id="metrics" class="metrics"></div>
+            <div id="warnings" class="warnings" hidden></div>
+            <div class="section-line">
+              <h2>Systems & scan defaults</h2>
+              <span class="muted">Check the systems to enable after programming.</span>
+            </div>
+            <div id="systems" class="system-grid"></div>
+            <div class="section-line">
+              <h2>Channel details</h2>
+              <label class="search-label"
+                ><span class="sr-only">Filter channels</span
+                ><input
+                  id="filter"
+                  type="search"
+                  placeholder="Find a channel, frequency or talkgroup…"
+              /></label>
+            </div>
+            <div id="channel-list"></div>
+            <details id="sources-panel" class="reference-panel">
+              <summary>Sources & research notes</summary>
+              <div id="sources"></div>
+            </details>
+            <div class="review-bar">
+              <label
+                ><input id="reviewed" type="checkbox" /> I reviewed the channels, sources and
+                initial scan selection.</label
+              ><button data-go="scanner" class="primary">Continue to scanner →</button>
+            </div>
+          </div>
+          <div class="section-line lower">
+            <button id="add-channel" class="text-button">＋ Add a conventional channel</button
+            ><button id="refresh-plans" class="text-button">Refresh agent inbox</button>
+          </div>
+          <div id="inbox" class="inbox"></div>
+        </section>
+        <section id="view-agent" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">02 / YOUR AGENT, YOUR AREA</p>
+              <h1>Start with a useful brief.</h1>
+              <p class="lede">Your assistant researches. This workspace validates and programs.</p>
+            </div>
+          </div>
+          <div class="split">
+            <form id="brief-form" class="panel">
+              <h2>Where do you listen?</h2>
+              <label
+                >Areas<input
+                  name="areas"
+                  required
+                  placeholder="City, county and state; nearby family or travel areas"
+              /></label>
+              <p class="field-note">A town or county is enough. A home address is optional.</p>
+              <label
+                >Interests<textarea name="interests" rows="3">
+Public safety, local amateur repeaters, weather, travel</textarea></label
+              ><label
+                >Coverage goal<input
+                  name="radius"
+                  value="Local reception and nearby travel" /></label
+              ><label
+                >Additional preferences<textarea
+                  name="notes"
+                  rows="2"
+                  placeholder="Services to prioritize, existing antenna, travel routes…"
+                ></textarea></label
+              ><button class="primary" type="submit">Build research brief</button>
+            </form>
+            <div class="panel">
+              <span class="tag">WORKS WITH YOUR ASSISTANT</span>
+              <h2>Use chat, CLI or MCP.</h2>
+              <ol class="instructions">
+                <li>Copy the brief into your preferred assistant with this project available.</li>
+                <li>Have it research current sources and produce a validated JSON plan.</li>
+                <li>Import its file, or let an MCP-connected agent stage it in your inbox.</li>
+              </ol>
+              <p class="muted">
+                The programmer contains no frequency database or model API. Your agent supplies
+                research using its own tools and permissions.
+              </p>
+              <details>
+                <summary>Connect an MCP-capable agent</summary>
+                <p>
+                  Merge this entry into your agent’s MCP configuration. It uses your installed Node
+                  executable and this workspace.
+                </p>
+                <pre id="mcp-config"></pre>
+                <button id="copy-config">Copy MCP configuration</button>
+                <p class="field-note">
+                  For tools without MCP, use the command-line workflow in the agent guide.
+                </p>
+              </details>
+              <a class="inline-link" href="/agent-start" target="_blank" rel="noopener"
+                >Read the agent integration guide ↗</a
+              >
+            </div>
+          </div>
+          <div id="brief-result" class="panel lower" hidden>
+            <div class="section-line">
+              <h2>Your agent brief</h2>
+              <div class="actions">
+                <button id="copy-brief" class="primary">Copy brief</button
+                ><button id="download-brief">Save text file</button>
+              </div>
+            </div>
+            <pre id="brief-text" class="brief"></pre>
+          </div>
+        </section>
+        <section id="view-scanner" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">03 / CONNECT, PROGRAM, VERIFY</p>
+              <h1>Ready for the radio.</h1>
+              <p class="lede">A saved backup comes first. A complete readback comes last.</p>
+            </div>
+            <span id="connection-chip" class="chip">Not connected</span>
+          </div>
+          <div class="split">
+            <div class="panel">
+              <h2>Connect your BCD325P2</h2>
+              <ol class="instructions">
+                <li>Turn on the scanner. Connect a mini-USB <strong>data</strong> cable.</li>
+                <li>Leave it on the ordinary Scan/Hold screen, outside its menus.</li>
+                <li>In desktop Chrome, choose <strong>BCD325P2 Serial Port</strong>.</li>
+              </ol>
+              <div class="actions">
+                <button id="connect" class="primary">Connect scanner</button
+                ><button id="disconnect" disabled>Disconnect</button>
+              </div>
+              <p id="identity" class="field-note">
+                Uses the Mac’s USB serial driver. No Windows guest or replacement driver.
+              </p>
+            </div>
+            <div class="panel">
+              <h2 id="upload-title">No plan selected</h2>
+              <p id="upload-summary" class="muted">
+                Import or prepare a plan, then review it before programming.
+              </p>
+              <div class="actions vertical">
+                <button id="program" class="primary" disabled>Back up & program</button
+                ><button id="verify" disabled>Verify installed plan</button
+                ><button id="backup" disabled>Read & save backup only</button>
+              </div>
+              <p id="upload-reason" class="field-note">Connect the scanner to continue.</p>
+            </div>
+          </div>
+          <div class="panel lower">
+            <div class="section-line">
+              <h2>Session activity</h2>
+              <div class="actions">
+                <button id="download-log">Download session log</button
+                ><button id="stop" disabled>Stop after current command</button>
+              </div>
+            </div>
+            <p id="scanner-status" role="status" aria-live="polite">Ready when you are.</p>
+            <pre id="log" class="session-log" aria-label="Session log"></pre>
+          </div>
+          <p class="field-note">
+            Existing systems are preserved. An interrupted upload is resumed only when its saved
+            receipt and scanner records agree. Raw snapshots are diagnostic backups; automatic
+            restoration is not included.
+          </p>
+        </section>
+        <section id="view-records" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">04 / SAVED LOCALLY</p>
+              <h1>A record of every session.</h1>
+              <p class="lede">
+                Keep verification evidence close. Share logs only after checking their contents.
+              </p>
+            </div>
+            <button id="refresh-history">Refresh records</button>
+          </div>
+          <p id="data-directory" class="path-note"></p>
+          <div id="history"></div>
+        </section>
+        <section id="view-guide" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">05 / AT THE SCANNER</p>
+              <h1>From upload to listening.</h1>
+              <p class="lede">Programming success confirms memory. Listening confirms reception.</p>
+            </div>
+          </div>
+          <div class="guide-grid">
+            <article class="panel">
+              <h2>Start scanning</h2>
+              <p>
+                After “Upload verified,” press <strong>Scan/Srch</strong>. Set volume and squelch. A
+                quiet channel may simply have no traffic.
+              </p>
+              <p>
+                Use the actual quick keys printed after upload. Press a one-digit key during
+                scanning to toggle a system. For two digits, press <strong>./no</strong>, then the
+                two digits.
+              </p>
+            </article>
+            <article class="panel">
+              <h2>Keep continuous signals separate</h2>
+              <p>
+                NOAA weather and broadcast FM transmit continuously. Enable those systems for
+                deliberate listening, then disable them to return to ordinary incident scanning.
+              </p>
+              <p>This programmer does not configure SAME weather-alert standby.</p>
+            </article>
+            <article class="panel">
+              <h2>Understand receive limits</h2>
+              <p>
+                P25 Phase I and II use P25 Standard systems with sites and talkgroups. Encrypted
+                audio cannot be decoded. Terrain, antenna placement and simulcast distortion affect
+                reception.
+              </p>
+              <p>
+                DMR, NXDN, EDACS, LTR and Motorola Type II programming are outside this version’s
+                scope.
+              </p>
+            </article>
+            <article class="panel">
+              <h2>If a session stops</h2>
+              <p>
+                Keep the receipt. Reconnect and load the same plan. The programmer checks matching
+                saved records before resuming. A timeout never triggers an automatic retry of a
+                memory allocation.
+              </p>
+              <p>
+                If Remote Mode remains on screen after a connection failure, power the scanner off
+                and on before reconnecting.
+              </p>
+            </article>
+          </div>
+          <p class="field-note">
+            Unofficial community software. BCD325P2 protocol core tested on firmware 1.11.11 with
+            macOS 26.2 and Apple Silicon. The generalized interface needs wider hardware testing.
+          </p>
+        </section>
+        <footer>
+          MAC UNIDEN BCD325P2 <span>Local data · Open protocol · No account required</span>
+        </footer>
+      </main>
+    </div>
+    <dialog id="json-dialog">
+      <form id="json-form">
+        <div class="section-line">
+          <h2>Edit channel plan</h2>
+          <button type="button" data-close="json-dialog" aria-label="Close editor">×</button>
+        </div>
+        <p>Use the portable JSON format. Validation runs before the plan is accepted.</p>
+        <label
+          ><span class="sr-only">Channel plan JSON</span
+          ><textarea id="json-editor" rows="22" spellcheck="false"></textarea>
+        </label>
+        <p id="json-error" class="error" role="alert"></p>
+        <div class="actions">
+          <button type="submit" class="primary">Validate & use plan</button
+          ><button type="button" data-close="json-dialog">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="channel-dialog">
+      <form id="channel-form">
+        <div class="section-line">
+          <h2>Add a conventional channel</h2>
+          <button type="button" data-close="channel-dialog" aria-label="Close channel form">
+            ×
+          </button>
+        </div>
+        <label
+          >Channel name<input
+            name="name"
+            required
+            maxlength="80"
+            placeholder="County fire dispatch"
+        /></label>
+        <div class="form-row">
+          <label
+            >Frequency in MHz<input
+              name="frequencyMHz"
+              required
+              inputmode="decimal"
+              placeholder="155.1000" /></label
+          ><label
+            >Receive mode<select name="mode">
+              <option>NFM</option>
+              <option>FM</option>
+              <option>AM</option>
+              <option>FMB</option>
+              <option>P25</option>
+            </select></label
+          >
+        </div>
+        <label
+          >System name<input name="system" required value="Local channels" maxlength="80" /></label
+        ><label
+          >Source URL you checked (optional)<input name="source" type="url" placeholder="https://…"
+        /></label>
+        <label
+          >Source checked on<input id="channel-source-date" name="checked" type="date"
+        /></label>
+        <p class="field-note">
+          Repeater outputs are normally used for listening. Fixed tone/NAC filters are not set by
+          this version.
+        </p>
+        <p id="channel-error" class="error" role="alert"></p>
+        <button type="submit" class="primary">Add to plan</button>
+      </form>
+    </dialog>
+    <script type="module" src="/app.mjs"></script>
+  </body>
+</html>

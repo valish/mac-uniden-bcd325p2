@@ -1,0 +1,70 @@
+{
+  "format": "bcd325p2-plan-v1",
+  "title": "Synthetic protocol test plan",
+  "namespace": "UT",
+  "areas": [
+    "Synthetic fixture \u2014 not a researched listening plan"
+  ],
+  "researchDate": "2026-11-03",
+  "sources": [],
+  "systems": [
+    {
+      "name": "Conventional",
+      "type": "CNV",
+      "quickKey": 1,
+      "enabled": true,
+      "groups": [
+        {
+          "name": "Analog and P25",
+          "quickKey": 1,
+          "channels": [
+            {
+              "name": "Analog test",
+              "frequencyMHz": "155.1000",
+              "mode": "NFM"
+            },
+            {
+              "name": "Digital test",
+              "frequencyMHz": "155.2000",
+              "mode": "P25"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "P25 Standard",
+      "type": "P25S",
+      "quickKey": 6,
+      "enabled": false,
+      "groups": [
+        {
+          "name": "Talkgroups",
+          "quickKey": 1,
+          "channels": [
+            {
+              "name": "Test talkgroup",
+              "tgid": 101,
+              "encryption": "clear"
+            }
+          ]
+        }
+      ],
+      "sites": [
+        {
+          "name": "Site Alpha",
+          "frequencies": [
+            "851.0125",
+            "852.0125"
+          ]
+        },
+        {
+          "name": "Site Beta",
+          "frequencies": [
+            "853.0125"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "format": "bcd325p2-plan-v1",
+  "title": "NOAA weather example",
+  "example": true,
+  "namespace": "WX",
+  "areas": [
+    "United States \u2014 choose a locally receivable transmitter"
+  ],
+  "researchDate": "2026-11-03",
+  "notes": "Example layout. These seven NOAA frequencies are not a local reception prediction. Weather broadcasts are continuous; keep them separate from incident scanning.",
+  "sources": [
+    {
+      "id": "noaa",
+      "title": "NOAA Weather Radio",
+      "url": "https://www.weather.gov/nwr/",
+      "checked": "2026-11-03"
+    }
+  ],
+  "systems": [
+    {
+      "name": "Weather",
+      "type": "CNV",
+      "quickKey": 90,
+      "enabled": true,
+      "groups": [
+        {
+          "name": "NOAA channels",
+          "quickKey": 1,
+          "channels": [
+            {
+              "name": "NOAA 1",
+              "frequencyMHz": "162.5500",
+              "mode": "FM",
+              "sourceIds": [
+                "noaa"
+              ]
+            },
+            {
+              "name": "NOAA 2",
+              "frequencyMHz": "162.4000",
+              "mode": "FM",
+              "sourceIds": [
+                "noaa"
+              ]
+            },
+            {
+              "name": "NOAA 3",
+              "frequencyMHz": "162.4750",
+              "mode": "FM",
+              "sourceIds": [
+                "noaa"
+              ]
+            },
+            {
+              "name": "NOAA 4",
+              "frequencyMHz": "162.4250",
+              "mode": "FM",
+              "sourceIds": [
+                "noaa"
+              ]
+            },
+            {
+              "name": "NOAA 5",
+              "frequencyMHz": "162.4500",
+              "mode": "FM",
+              "sourceIds": [
+                "noaa"
+              ]
+            },
+            {
+              "name": "NOAA 6",
+              "frequencyMHz": "162.5000",
+              "mode": "FM",
+              "sourceIds": [
+                "noaa"
+              ]
+            },
+            {
+              "name": "NOAA 7",
+              "frequencyMHz": "162.5250",
+              "mode": "FM",
+              "sourceIds": [
+                "noaa"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

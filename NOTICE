@@ -1,0 +1,23 @@
+mac-uniden-bcd325p2 is unofficial community software. It is not affiliated with,
+sponsored by, or endorsed by Uniden. Uniden and BCD325P2 identify the hardware
+with which the software interoperates.
+
+Protocol and implementation references:
+- Uniden BCD325P2 Remote Protocol v1.02:
+  https://info.uniden.com/twiki/pub/UnidenMan4/BCD325P2FirmwareUpdate/BCD325P2_Remote_Protocol_ver_1_02.pdf
+- Uniden BCD325P2 owner manual:
+  https://www.uniden.info/download/ompdf/BCD325P2om.pdf
+- Chrome Web Serial documentation:
+  https://developer.chrome.com/docs/capabilities/serial
+- Brad Town's browser-based Uniden scanner work, consulted during the initial
+  investigation of programming on a Mac:
+  https://bradtown.com/uniden_scanner/
+- Model Context Protocol specification:
+  https://modelcontextprotocol.io/specification/2025-11-25
+
+Vendor manuals, third-party frequency databases and personal scanner records
+are not distributed with this project. The MIT license covers the project code
+and original documentation, not independently owned source materials linked
+from plans or documentation. Check source-specific terms before redistributing
+channel datasets. NOAA example frequencies illustrate a public weather service;
+they do not predict local reception.

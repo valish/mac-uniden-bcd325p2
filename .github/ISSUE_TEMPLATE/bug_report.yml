@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible problem without personal scanner data.
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and observed behavior
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Scanner firmware, macOS, browser and Node versions
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps and minimal sanitized command or error
+      description: Do not upload a complete scanner snapshot, personal plan, address, phone number, local path or credential.
+    validations:
+      required: true
+  - type: dropdown
+    id: evidence
+    attributes:
+      label: Where was this observed?
+      options:
+        - Physical scanner
+        - Browser with simulated scanner
+        - CLI or MCP
+        - Automated test
+    validations:
+      required: true
