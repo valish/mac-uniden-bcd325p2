@@ -4,7 +4,7 @@ A local, unofficial programmer for the **Uniden BCD325P2**. Prepare channels wit
 
 **Experimental · private development repository · Node.js 22+ · no runtime packages or account required**
 
-The original protocol core completed a physical upload and fresh-session readback on a BCD325P2 with firmware **1.11.11**, using an Apple Silicon Mac on macOS **26.2**. That run covered 247 conventional channels, 28 talkgroups, five P25 sites and 15 site frequencies. This generalized interface, plan compiler and agent integration require their own testing; one successful device does not establish compatibility with every firmware or Mac.
+The original protocol core completed a physical upload on a BCD325P2 with firmware **1.11.11**, using an Apple Silicon Mac on macOS **26.2**. The standalone application subsequently reapplied and verified those existing records: 247 conventional channels, 28 talkgroups, five P25 sites and 15 site frequencies. That hardware test covered backup, every channel write, listening-key finalization and fresh-session readback through the new interface. Standalone creation of new records still needs a physical test; one device does not establish compatibility with every firmware or Mac. See the [validation record](docs/COMPATIBILITY.md).
 
 ## Start
 

@@ -15,7 +15,7 @@ That establishes this protocol path on one device. It does not establish recepti
 
 ## Generalized application
 
-The standalone application adds a new plan compiler, CSV import, browser interface, Node server and MCP integration. These are tested with synthetic fixtures and must be distinguished from the original-core hardware run.
+The standalone application adds a new plan compiler, CSV import, browser interface, Node server and MCP integration. Synthetic coverage and the standalone hardware reapplication test are recorded separately below.
 
 | Environment                                                 | Status                                                                                    |
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -23,13 +23,24 @@ The standalone application adds a new plan compiler, CSV import, browser interfa
 | Standalone protocol/transport                               | Automated wire/stream regression tests                                                    |
 | Standalone source plans, local service and MCP              | See current automated test results                                                        |
 | Standalone browser UI                                       | Chromium 156.0.8078.4 simulated workflow passed; desktop/mobile and print output reviewed |
-| Standalone complete physical-device workflow                | Requires a separate hardware run before claiming it tested                                |
+| Standalone physical reapplication of existing records       | Backup, all writes, finalization and fresh-session readback passed on BCD325P2 1.11.11    |
+| Standalone allocation of new records on hardware            | Not exercised by the reapplication test; still requires physical validation               |
 | Other firmware / Intel Macs / other OSes                    | Unverified                                                                                |
 | Other scanner models                                        | Rejected; unsupported                                                                     |
 
 On November 3, 2026 (local time), the standalone application passed 43 automated tests. A separate headless Chromium run passed plan import, agent brief/configuration, example-upload blocking, review gating, simulated upload and readback, stop/retry, session-log preservation after disconnection, saved records and unfiltered printing. Desktop and 390-pixel mobile screenshots and the printable reference were inspected. The browser run used an isolated synthetic Web Serial device and did not access a physical scanner.
 
-A clean source archive also passed syntax/schema/documentation checks, the release privacy audit and CLI plan validation without installing runtime packages. These results cover the private prototype; the complete standalone physical-device workflow remains a public-release prerequisite.
+A clean source archive also passed syntax/schema/documentation checks, the release privacy audit and CLI plan validation without installing runtime packages. GitHub CI passed on macOS and Ubuntu with Node 22 and 24.
+
+## Standalone physical reapplication
+
+On November 3, 2026, at 10:19 p.m. Eastern, standalone revision `d1ecbe0dfa136d57cd5d62c59614540d1d253345` successfully reapplied the existing plan on the same BCD325P2, firmware 1.11.11, through desktop Chrome on the Mac.
+
+The existing source plan was converted to the portable format with exact equality of scanner labels, receive settings, frequencies, talkgroups, groups, sites and preferred keys. All 290 original source records were accounted for. The standalone app first read the physical scanner and verified the installed plan. A private, one-time migration helper then prepared a receipt using those verified memory handles so the existing records could be reused for this test. This migration helper is not a general import or restore feature in the application.
+
+The subsequent user-operated **Back up & program** run saved a pre-write snapshot, issued 247 conventional-channel setters, 28 talkgroup setters and 15 site-frequency setters, finalized listening keys, and read the complete configuration in a fresh session. Three programming sessions each ended with an acknowledged `EPG,OK`. The completed receipt and final snapshot were independently checked against the compiled plan. All 11 systems retained their configuration, no records were allocated or deleted, and the recovery ticket cleared after completion. Personal source data, snapshots and transcripts remain private.
+
+This is physical evidence for the standalone read, rewrite, finalization and verification path. It does not exercise allocation of new records, recovery from a physical cable/power failure, or received audio. Test a fresh installation with the standalone app before publishing a broader hardware-support claim. Reapplication was performed through verified-handle migration; the ordinary duplicate-install guard remains in place.
 
 ## Reporting a hardware test
 
