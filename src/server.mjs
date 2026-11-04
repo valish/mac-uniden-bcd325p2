@@ -13,6 +13,10 @@ const assets = new Map([
   ['/app.mjs', ['web/app.mjs', 'text/javascript']],
   ['/style.css', ['web/style.css', 'text/css']],
   ['/icon.svg', ['web/icon.svg', 'image/svg+xml']],
+  ...['Regular', 'SemiBold'].map((weight) => [
+    `/fonts/IBMPlexSans-${weight}.woff2`,
+    [`web/fonts/IBMPlexSans-${weight}.woff2`, 'font/woff2'],
+  ]),
   ...['plan', 'schema', 'csv', 'protocol', 'transport'].map((n) => [
     `/src/${n}.mjs`,
     [`src/${n}.mjs`, 'text/javascript'],
@@ -24,7 +28,7 @@ const assets = new Map([
 function respond(res, status, body, mime = 'application/json') {
   const data = typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body);
   res.writeHead(status, {
-    'Content-Type': mime + '; charset=utf-8',
+    'Content-Type': mime.startsWith('font/') ? mime : mime + '; charset=utf-8',
     'Content-Length': Buffer.byteLength(data),
     'Cache-Control': 'no-store',
     'X-Content-Type-Options': 'nosniff',

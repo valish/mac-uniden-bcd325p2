@@ -21,3 +21,15 @@ and original documentation, not independently owned source materials linked
 from plans or documentation. Check source-specific terms before redistributing
 channel datasets. NOAA example frequencies illustrate a public weather service;
 they do not predict local reception.
+
+Bundled visual assets:
+- IBM Plex Sans Regular and SemiBold, Copyright 2017 IBM Corp., Reserved Font
+  Name "Plex", are distributed unchanged under the SIL Open Font License 1.1.
+  The full license is web/fonts/LICENSE.txt. These font files are not MIT-licensed.
+- The README scanner/laptop illustration was generated with OpenAI image
+  generation. It is editorial artwork, not a vendor photograph, product diagram
+  or evidence of a hardware test.
+- README application screenshots use public example or synthetic test data.
+  They are actual browser captures, not generated UI mockups.
+
+See docs/ASSETS.md for source URLs, reproduction instructions and the image prompt.

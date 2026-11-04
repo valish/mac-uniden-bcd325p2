@@ -41,7 +41,9 @@ for (const file of files) {
   }
   const content = await fs.readFile(path.join(root, file));
   if (content.length > 2 * 1024 * 1024) failures.push(`${file}: unexpected large asset`);
-  if (/\.(png|jpg|webp|ico)$/.test(file)) continue;
+  if (file.endsWith('.woff2') && content.subarray(0, 4).toString() !== 'wOF2')
+    failures.push(`${file}: invalid WOFF2 header`);
+  if (/\.(png|jpg|webp|ico|woff2)$/.test(file)) continue;
   const text = content.toString('utf8');
   for (const [name, pattern] of [
     ['absolute home path', /\/(?:Users|home)\/[A-Za-z0-9_.-]+\//],
@@ -55,7 +57,7 @@ for (const file of files) {
 }
 const pkg = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
 if (pkg.private !== true)
-  failures.push('package.json: private must remain true during development');
+  failures.push('package.json: private must remain true to prevent accidental npm publication');
 if (Object.keys(pkg.dependencies || {}).length)
   failures.push('Runtime packages introduced; review offline contract');
 for (const required of [
@@ -63,6 +65,7 @@ for (const required of [
   'AGENTS.md',
   'LICENSE',
   'NOTICE',
+  'web/fonts/LICENSE.txt',
   'SECURITY.md',
   'llms.txt',
   'schemas/plan.schema.json',

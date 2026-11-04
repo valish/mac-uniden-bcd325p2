@@ -11,6 +11,8 @@ const { chromium } = await import(moduleName ? pathToFileURL(moduleName).href : 
 const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'bcd325p2-browser-'));
 const artifacts = path.join(ROOT, 'artifacts');
 await fs.mkdir(artifacts, { recursive: true });
+const publicImages = path.join(artifacts, 'public-preview');
+await fs.mkdir(publicImages, { recursive: true });
 let running, browser;
 const errors = [];
 try {
@@ -37,12 +39,33 @@ try {
  `,
   });
   const page = await context.newPage();
+  async function publicScreenshot(name) {
+    await page.evaluate(() => document.fonts.ready);
+    const visible = await page.locator('body').innerText();
+    assert.doesNotMatch(
+      visible,
+      /\/(?:Users|home)\/|\.local\//,
+      'Public screenshots must not contain private paths or the originating listening plan',
+    );
+    await page.screenshot({
+      path: path.join(publicImages, name),
+      fullPage: true,
+      animations: 'disabled',
+      caret: 'hide',
+    });
+  }
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(running.url);
   await page.locator('#inbox').getByText('Agent inbox is empty.', { exact: false }).waitFor();
+  await page.evaluate(() => document.fonts.ready);
+  assert.equal(await page.evaluate(() => document.fonts.check('15px "IBM Plex Sans"')), true);
+  await page.keyboard.press('Tab');
+  assert.equal(await page.locator('.skip').evaluate((el) => el === document.activeElement), true);
+  await page.keyboard.press('Tab');
   await page.screenshot({ path: path.join(artifacts, '01-start-desktop.png'), fullPage: true });
   await page.getByRole('button', { name: 'Prepare with your agent', exact: true }).click();
   await page.locator('[name=areas]').fill('Example County, Pennsylvania');
+  await publicScreenshot('agent-brief.png');
   await page.getByRole('button', { name: 'Build research brief' }).click();
   assert.ok(
     (await page.locator('#brief-text').textContent()).includes('Example County, Pennsylvania'),
@@ -52,6 +75,7 @@ try {
   await page.locator('[data-view=plan]').click();
   await page.locator('#example').click();
   await page.locator('#plan-title').getByText('NOAA weather example', { exact: true }).waitFor();
+  await publicScreenshot('listening-plan.png');
   await page.locator('#reviewed').check();
   await page.locator('[data-view=scanner]').click();
   await page.locator('#connect').click();
@@ -68,9 +92,24 @@ try {
     .locator('#plan-title')
     .getByText('Synthetic protocol test plan', { exact: true })
     .waitFor();
+  assert.ok(
+    (await page.locator('#warnings').textContent()).includes(
+      'Conventional / Analog and P25 / Analog test',
+    ),
+  );
+  assert.ok(!(await page.locator('#warnings').textContent()).includes('plan.systems['));
   await page.locator('#filter').fill('Digital test');
   assert.equal(await page.locator('#channel-list tbody tr').count(), 1);
   await page.locator('#filter').fill('');
+  const firstSystem = page.locator('.system-card').first();
+  const originalState = await firstSystem.locator('input').isChecked();
+  await firstSystem.locator('input').setChecked(!originalState);
+  assert.equal(
+    await firstSystem.locator('.scan-state').textContent(),
+    originalState ? 'Off' : 'On',
+  );
+  assert.equal(await page.locator('#reviewed').isChecked(), false);
+  await firstSystem.locator('input').setChecked(originalState);
   await page.locator('#reviewed').check();
   await page.screenshot({ path: path.join(artifacts, '03-plan-desktop.png'), fullPage: true });
   await page.locator('[data-view=scanner]').click();
@@ -87,6 +126,7 @@ try {
   );
   assert.equal(await page.evaluate(() => window.__testRadio.systems.length), 2);
   await page.screenshot({ path: path.join(artifacts, '04-scanner-desktop.png'), fullPage: true });
+  await publicScreenshot('program-verify.png');
   // Stop a read operation once, then ensure another backup can start normally.
   await page.evaluate(() => {
     const radio = window.__testRadio;
@@ -128,6 +168,7 @@ try {
   assert.equal(await page.locator('#channel-list tbody tr').count(), 6);
   assert.equal(await page.locator('#sources-panel').evaluate((node) => node.open), true);
   await page.emulateMedia({ media: 'print' });
+  assert.equal(await firstSystem.locator('.scan-state').isVisible(), true);
   await page.pdf({
     path: path.join(artifacts, 'field-reference.pdf'),
     format: 'Letter',
@@ -153,6 +194,17 @@ try {
     true,
     'agent mobile horizontal overflow',
   );
+  await page.setViewportSize({ width: 320, height: 740 });
+  for (const name of ['agent', 'plan', 'scanner', 'records', 'guide']) {
+    await page.locator(`[data-view=${name}]`).click();
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      true,
+      `${name}: 320px horizontal overflow`,
+    );
+  }
+  await page.locator('[data-view=plan]').click();
+  await page.screenshot({ path: path.join(artifacts, '07-plan-narrow.png'), fullPage: true });
   assert.deepEqual(errors, []);
   const report = {
     status: 'passed',
@@ -173,6 +225,11 @@ try {
       'session records',
       'unfiltered print PDF and restored screen filter',
       'desktop/mobile layout',
+      '320px reflow in every view',
+      'local font loading and keyboard skip link',
+      'scan selection labels on screen and print',
+      'review warnings identify channels by name',
+      'public screenshots contain only example/synthetic data',
       'no page errors',
     ],
     hardware: 'Not accessed; synthetic Web Serial emulator only',

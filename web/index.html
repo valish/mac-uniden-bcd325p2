@@ -22,14 +22,12 @@
     </header>
     <div class="shell">
       <aside class="sidebar">
-        <p class="nav-label">WORKSPACE</p>
         <nav aria-label="Workspace">
-          <button class="nav active" data-view="plan" aria-current="page">
-            <span>01</span> Listening plan</button
-          ><button class="nav" data-view="agent"><span>02</span> Prepare with an agent</button
-          ><button class="nav" data-view="scanner"><span>03</span> Program & verify</button
-          ><button class="nav" data-view="records"><span>04</span> Session records</button
-          ><button class="nav" data-view="guide"><span>05</span> Field reference</button>
+          <button class="nav active" data-view="plan" aria-current="page">Listening plan</button
+          ><button class="nav" data-view="agent">Prepare with an agent</button
+          ><button class="nav" data-view="scanner">Program & verify</button
+          ><button class="nav" data-view="records">Session records</button
+          ><button class="nav" data-view="guide">Scanner reference</button>
         </nav>
         <div class="sidebar-foot">
           <span class="version">EXPERIMENTAL · 0.1.0</span>
@@ -42,19 +40,16 @@
         <section id="view-plan" class="view">
           <div class="page-heading">
             <div>
-              <p class="eyebrow">01 / PREPARE & REVIEW</p>
-              <h1>Your listening plan</h1>
-              <p class="lede">Bring the channels. Review the details. Keep the radio yours.</p>
+              <h1>Listening plan</h1>
+              <p class="lede">Review channels, sources and the systems to scan.</p>
             </div>
             <div class="heading-actions">
-              <button id="import" class="primary">
-                Import a plan <span aria-hidden="true">↗</span></button
+              <button id="import" class="primary">Import a plan</button
               ><input id="file" type="file" accept=".json,.csv,application/json,text/csv" hidden />
             </div>
           </div>
           <div id="empty-plan" class="empty-panel">
-            <div class="empty-symbol" aria-hidden="true">↳</div>
-            <h2>Start with the area you listen to.</h2>
+            <h2>No plan selected</h2>
             <p>
               Ask your agent to research a plan, import JSON or conventional CSV, or add a channel
               yourself.
@@ -63,11 +58,10 @@
               <button data-go="agent" class="primary">Prepare with your agent</button
               ><button id="example">Explore a weather example</button>
             </div>
-            <div class="three-steps">
-              <div><b>1. Research</b><span>Current frequencies, sites and sources.</span></div>
-              <div><b>2. Review</b><span>Readable names and deliberate scan defaults.</span></div>
-              <div><b>3. Program</b><span>Back up, upload, then check every record.</span></div>
-            </div>
+            <p class="field-note">
+              Supported input: BCD325P2 plan JSON or conventional-channel CSV. The weather example
+              is for preview.
+            </p>
           </div>
           <div id="plan-content" hidden>
             <div class="plan-title">
@@ -120,9 +114,10 @@
         <section id="view-agent" class="view" hidden>
           <div class="page-heading">
             <div>
-              <p class="eyebrow">02 / YOUR AGENT, YOUR AREA</p>
-              <h1>Start with a useful brief.</h1>
-              <p class="lede">Your assistant researches. This workspace validates and programs.</p>
+              <h1>Prepare with an agent</h1>
+              <p class="lede">
+                Describe your area. Give the research brief to your preferred assistant.
+              </p>
             </div>
           </div>
           <div class="split">
@@ -151,8 +146,7 @@ Public safety, local amateur repeaters, weather, travel</textarea></label
               ><button class="primary" type="submit">Build research brief</button>
             </form>
             <div class="panel">
-              <span class="tag">WORKS WITH YOUR ASSISTANT</span>
-              <h2>Use chat, CLI or MCP.</h2>
+              <h2>From research to a listening plan</h2>
               <ol class="instructions">
                 <li>Copy the brief into your preferred assistant with this project available.</li>
                 <li>Have it research current sources and produce a validated JSON plan.</li>
@@ -193,9 +187,8 @@ Public safety, local amateur repeaters, weather, travel</textarea></label
         <section id="view-scanner" class="view" hidden>
           <div class="page-heading">
             <div>
-              <p class="eyebrow">03 / CONNECT, PROGRAM, VERIFY</p>
-              <h1>Ready for the radio.</h1>
-              <p class="lede">A saved backup comes first. A complete readback comes last.</p>
+              <h1>Program & verify</h1>
+              <p class="lede">Save a backup, write the plan, then verify the scanner’s memory.</p>
             </div>
             <span id="connection-chip" class="chip">Not connected</span>
           </div>
@@ -236,7 +229,7 @@ Public safety, local amateur repeaters, weather, travel</textarea></label
                 ><button id="stop" disabled>Stop after current command</button>
               </div>
             </div>
-            <p id="scanner-status" role="status" aria-live="polite">Ready when you are.</p>
+            <p id="scanner-status" role="status" aria-live="polite">No session started.</p>
             <pre id="log" class="session-log" aria-label="Session log"></pre>
           </div>
           <p class="field-note">
@@ -248,10 +241,9 @@ Public safety, local amateur repeaters, weather, travel</textarea></label
         <section id="view-records" class="view" hidden>
           <div class="page-heading">
             <div>
-              <p class="eyebrow">04 / SAVED LOCALLY</p>
-              <h1>A record of every session.</h1>
+              <h1>Session records</h1>
               <p class="lede">
-                Keep verification evidence close. Share logs only after checking their contents.
+                Saved backups, upload receipts and verification results. Review logs before sharing.
               </p>
             </div>
             <button id="refresh-history">Refresh records</button>
@@ -262,8 +254,7 @@ Public safety, local amateur repeaters, weather, travel</textarea></label
         <section id="view-guide" class="view" hidden>
           <div class="page-heading">
             <div>
-              <p class="eyebrow">05 / AT THE SCANNER</p>
-              <h1>From upload to listening.</h1>
+              <h1>Scanner reference</h1>
               <p class="lede">Programming success confirms memory. Listening confirms reception.</p>
             </div>
           </div>

@@ -2,13 +2,17 @@
 
 A local, unofficial programmer for the **Uniden BCD325P2**. Prepare channels with your preferred LLM agent, import a source-checked plan, review it, and program the scanner through Chrome’s Web Serial connection.
 
-**Experimental · private development repository · Node.js 22+ · no runtime packages or account required**
+![Illustration of a handheld scanner connected to a Mac laptop by a USB cable](docs/images/scanner-mac-illustration.jpg)
 
-The original protocol core completed a physical upload on a BCD325P2 with firmware **1.11.11**, using an Apple Silicon Mac on macOS **26.2**. The standalone application subsequently reapplied and verified those existing records: 247 conventional channels, 28 talkgroups, five P25 sites and 15 site frequencies. That hardware test covered backup, every channel write, listening-key finalization and fresh-session readback through the new interface. Standalone creation of new records still needs a physical test; one device does not establish compatibility with every firmware or Mac. See the [validation record](docs/COMPATIBILITY.md).
+_Generated editorial illustration; not an official product drawing. [Image and font provenance](docs/ASSETS.md)._
+
+**Experimental · macOS + desktop Chrome · Node.js 22+ · MIT · no runtime packages or account required**
+
+The standalone application has physically rewritten and verified an existing 11-system plan on a BCD325P2 with firmware **1.11.11**, using an Apple Silicon Mac on macOS **26.2**. **Creating new records with this standalone app still needs a physical test.** Read the [hardware evidence and limits](docs/COMPATIBILITY.md) before programming. Configuration readback does not establish received audio or reliable simulcast reception.
 
 ## Start
 
-Install [Node.js 22 or newer](https://nodejs.org/), then download or clone this repository. The repository is private during development, so GitHub access is required to download it.
+Install [Node.js 22 or newer](https://nodejs.org/) and desktop [Google Chrome](https://www.google.com/chrome/), then download or clone this repository. Programming uses Chrome’s [Web Serial connection](https://developer.chrome.com/docs/capabilities/serial).
 
 ```sh
 git clone https://github.com/valish/mac-uniden-bcd325p2.git
@@ -23,6 +27,30 @@ Alternatively, double-click **Start Programmer.command**. No `npm install` is ne
 3. **Connect.** Power on the BCD325P2, attach a mini-USB **data** cable, leave it on Scan/Hold, and select its serial port in Chrome.
 4. **Program.** The app saves existing memory before writing, preserves existing systems, and verifies saved records and quick keys in a fresh programming session.
 5. **Listen.** After “Upload verified,” press **Scan/Srch**. Readback proves configuration; reception still depends on activity, terrain, antennas and signal quality.
+
+## Screenshots
+
+Actual app captures from an isolated browser session. Only the included weather example and synthetic test data are shown; no personal listening plan or scanner backup is included.
+
+**Review the listening plan.** Frequencies, source links, initial scan states and quick keys remain together. The reference can be printed for use away from the computer.
+
+![Listening plan with the seven NOAA example channels, their frequencies, source links and system quick key](docs/images/listening-plan.png)
+
+<details>
+<summary>Prepare a research brief with your own assistant</summary>
+
+![Agent brief form with a fictional example area, listening interests and instructions for chat, CLI or MCP](docs/images/agent-brief.png)
+
+</details>
+
+<details>
+<summary>Back up, program and verify — simulated scanner</summary>
+
+The connected device and successful readback shown here are from the test emulator. Physical-device evidence is documented separately in the [compatibility record](docs/COMPATIBILITY.md).
+
+![Program and verify screen showing a completed synthetic upload, saved receipt and verification log](docs/images/program-verify.png)
+
+</details>
 
 ## Use your own agent
 
@@ -72,6 +100,7 @@ Use `--data-dir /path/to/private-folder` consistently for the web server and MCP
 - [Programming, recovery and troubleshooting](docs/OPERATING.md)
 - [Architecture and protocol decisions](docs/ARCHITECTURE.md)
 - [Hardware validation and compatibility](docs/COMPATIBILITY.md)
+- [Release preparation](docs/RELEASING.md), [changes](CHANGELOG.md), [visual asset provenance](docs/ASSETS.md)
 - [Contributing](CONTRIBUTING.md), [security and privacy](SECURITY.md), [license](LICENSE)
 
 ## Development

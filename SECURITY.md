@@ -8,4 +8,4 @@ Private plans, receipts, snapshots and diagnostics belong under `.local/` or ano
 
 The app saves a diagnostic snapshot before writes and verifies afterward. It cannot make scanner programming atomic across power/cable loss and does not implement automatic restoration. An ambiguous allocation is stopped rather than retried.
 
-During private development, report vulnerabilities privately to the repository owner through the access channel already used for the project. Do not post live credentials or unredacted scanner records in an issue. Public security reporting should be configured before the repository is made public.
+Use the repository’s **Security → Report a vulnerability** option when available. If private reporting is unavailable, contact the maintainer through an existing private channel, or open an issue asking for a private reporting channel without including exploit details. Do not post live credentials or unredacted scanner records in a public issue. The maintainer should enable GitHub private vulnerability reporting when opening the repository to the public.

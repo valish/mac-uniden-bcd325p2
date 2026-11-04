@@ -1,6 +1,6 @@
 # Contributing
 
-This repository is private during development. Do not change visibility, publish a package, or enable public hosting without an explicit release decision.
+The project is experimental. Keep compatibility claims tied to the evidence in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). Repository visibility, package publication and public hosting require an explicit maintainer release decision.
 
 ## Run and test
 
@@ -34,7 +34,9 @@ An existing Playwright installation can be supplied with `PLAYWRIGHT_MODULE=/abs
 
 Inspect screenshots in `artifacts/` at desktop and mobile sizes. Check keyboard focus, file import, agent brief, MCP config, review gating, channel filtering, programming/verification, records and printing. Screenshots and browser test output are ignored by Git unless a separately reviewed public preview is deliberately included.
 
-## Before a private push
+The script also captures `artifacts/public-preview/` using only the included weather example, fictional research areas and the scanner emulator. After inspecting them, copy the three PNGs into `docs/images/` to refresh the README. Keep the simulation captions and update [asset provenance](docs/ASSETS.md). Capture after fonts finish loading; finish UI transitions before taking screenshots. Never substitute a generated image for an application screenshot.
+
+## Before a source push
 
 - Run the tests, syntax/schema checks and release audit.
 - Confirm only application code, synthetic examples, documentation and reviewed assets are tracked.
@@ -44,3 +46,5 @@ Inspect screenshots in `artifacts/` at desktop and mobile sizes. Check keyboard 
 ## Public release gate
 
 A private push is not a public release. Before publishing: complete the standalone browser/visual checks and a physical-device workflow, review licensing/provenance, test installation from a clean checkout, inspect the exact tracked-file inventory and Git history, and explicitly decide to change visibility. Record hardware results in `docs/COMPATIBILITY.md` without publishing private evidence.
+
+Follow [docs/RELEASING.md](docs/RELEASING.md). `package.json` deliberately keeps `private: true` to prevent accidental npm publication; that setting does not control GitHub repository visibility.

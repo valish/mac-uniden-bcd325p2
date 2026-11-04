@@ -32,6 +32,8 @@ On November 3, 2026 (local time), the standalone application passed 43 automated
 
 A clean source archive also passed syntax/schema/documentation checks, the release privacy audit and CLI plan validation without installing runtime packages. GitHub CI passed on macOS and Ubuntu with Node 22 and 24.
 
+The public-preview interface refinement was checked separately in Chromium 156.0.8078.4: all five views fit a 320-pixel viewport, the 390-pixel and desktop layouts were inspected, bundled fonts loaded locally, the keyboard skip link worked, and On/Off scan states remained visible in the printed reference. README captures use only the weather example and synthetic data. The refinement does not change the plan compiler, scanner protocol or serial transport; it does not extend the physical-device claims below.
+
 ## Standalone physical reapplication
 
 On November 3, 2026, at 10:19 p.m. Eastern, standalone revision `d1ecbe0dfa136d57cd5d62c59614540d1d253345` successfully reapplied the existing plan on the same BCD325P2, firmware 1.11.11, through desktop Chrome on the Mac.

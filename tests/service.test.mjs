@@ -139,6 +139,8 @@ test('HTTP assets include the runtime policy headers and do not expose arbitrary
       '/app.mjs',
       '/style.css',
       '/icon.svg',
+      '/fonts/IBMPlexSans-Regular.woff2',
+      '/fonts/IBMPlexSans-SemiBold.woff2',
       '/src/plan.mjs',
       '/src/schema.mjs',
       '/src/protocol.mjs',
@@ -151,6 +153,10 @@ test('HTTP assets include the runtime policy headers and do not expose arbitrary
       assert.equal(r.status, 200, file);
       assert.equal(r.headers['Cache-Control'], 'no-store');
       assert.ok(r.headers['Content-Security-Policy'].includes("script-src 'self'"));
+      if (file.endsWith('.woff2')) {
+        assert.equal(r.headers['Content-Type'], 'font/woff2');
+        assert.equal(r.body.subarray(0, 4).toString(), 'wOF2');
+      }
     }
     assert.equal((await request(store, 'GET', '/src/store.mjs')).status, 404);
   }));

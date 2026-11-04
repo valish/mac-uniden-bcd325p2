@@ -87,7 +87,7 @@ function controls() {
   for (const input of document.querySelectorAll('[data-system]')) input.disabled = busy;
   $('upload-title').textContent = compiled?.title || 'No plan selected';
   $('upload-summary').textContent = compiled
-    ? `${compiled.counts.conventional} channels · ${compiled.counts.talkgroups} talkgroups · ${compiled.counts.sites} sites. ${enabled.size} system(s) selected for initial listening.`
+    ? `${countLabel(compiled.counts.conventional, 'channel')} · ${countLabel(compiled.counts.talkgroups, 'talkgroup')} · ${countLabel(compiled.counts.sites, 'site')}. ${countLabel(enabled.size, 'system')} selected for initial listening.`
     : 'Import or prepare a plan, then review it before programming.';
   $('upload-reason').textContent = busy
     ? 'Working. Keep the cable and local server connected.'
@@ -163,33 +163,55 @@ async function usePlan(input, { persist = true } = {}) {
       : 'Plan validated. Review sources and choose the systems to enable.',
   );
 }
+function countLabel(count, noun) {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`;
+}
+function warningLocation(path) {
+  let record = sourcePlan;
+  const names = [];
+  for (const [, collection, index] of path.matchAll(
+    /(systems|groups|channels|sites|sources)\[(\d+)\]/g,
+  )) {
+    record = record?.[collection]?.[Number(index)];
+    if (record?.name || record?.title) names.push(record.name || record.title);
+  }
+  return names.join(' / ') || 'Plan settings';
+}
 function renderPlan(warnings = validationWarnings) {
   $('empty-plan').hidden = true;
   $('plan-content').hidden = false;
   $('plan-title').textContent = compiled.title;
   $('plan-kind').textContent = compiled.example
-    ? 'EXAMPLE · PREVIEW ONLY'
-    : 'VALIDATED CHANNEL PLAN';
+    ? 'Example · preview only'
+    : actualKeys
+      ? 'Scanner keys verified'
+      : 'Ready for review';
   $('plan-meta').textContent =
     `${sourcePlan.areas.join(' · ') || 'No area specified'} · Research date ${sourcePlan.researchDate} · ${compiled.id.slice(0, 8)}`;
   const metrics = $('metrics');
   metrics.replaceChildren();
   for (const [value, label] of [
-    [compiled.counts.conventional, 'Conventional channels'],
-    [compiled.counts.talkgroups, 'P25 talkgroups'],
-    [compiled.counts.sites, 'Trunk sites'],
-    [compiled.counts.systems, 'Systems'],
+    [compiled.counts.conventional, 'Conventional channel'],
+    [compiled.counts.talkgroups, 'P25 talkgroup'],
+    [compiled.counts.sites, 'Trunk site'],
+    [compiled.counts.systems, 'System'],
   ]) {
     const el = text('div', '', 'metric');
-    el.append(text('b', value), text('span', label));
+    el.append(text('b', value), text('span', label + (value === 1 ? '' : 's')));
     metrics.append(el);
   }
   $('warnings').replaceChildren();
   $('warnings').hidden = !warnings.length;
   if (warnings.length) {
-    $('warnings').append(text('strong', `${warnings.length} item(s) to review`));
+    $('warnings').append(
+      text('strong', `${warnings.length} ${warnings.length === 1 ? 'item' : 'items'} to review`),
+    );
     const list = document.createElement('ul');
-    for (const w of warnings.slice(0, 12)) list.append(text('li', `${w.message} (${w.path})`));
+    for (const w of warnings.slice(0, 12)) {
+      const item = document.createElement('li');
+      item.append(text('strong', warningLocation(w.path)), text('span', ` — ${w.message}`));
+      list.append(item);
+    }
     if (warnings.length > 12)
       list.append(
         text(
@@ -207,22 +229,34 @@ function renderPlan(warnings = validationWarnings) {
     check.type = 'checkbox';
     check.dataset.system = s.name;
     check.checked = enabled.has(s.name);
+    const scanState = text('span', check.checked ? 'On' : 'Off', 'scan-state');
+    card.dataset.enabled = String(check.checked);
     check.id = `system-${s.quickKey}`;
     label.htmlFor = check.id;
     label.append(
       text('span', s.fullName),
       text(
         'small',
-        `${s.type === 'CNV' ? 'Conventional' : 'P25 Standard'} · ${s.groups.reduce((n, g) => n + g.channels.length, 0)} ${s.type === 'CNV' ? 'channels' : 'talkgroups'}${s.sites ? ` · ${s.sites.length} sites` : ''}`,
+        `${s.type === 'CNV' ? 'Conventional' : 'P25 Standard'} · ${countLabel(
+          s.groups.reduce((n, g) => n + g.channels.length, 0),
+          s.type === 'CNV' ? 'channel' : 'talkgroup',
+        )}${s.sites ? ` · ${countLabel(s.sites.length, 'site')}` : ''}`,
       ),
     );
     check.addEventListener('change', () => {
       if (check.checked) enabled.add(s.name);
       else enabled.delete(s.name);
+      scanState.textContent = check.checked ? 'On' : 'Off';
+      card.dataset.enabled = String(check.checked);
       $('reviewed').checked = false;
       controls();
     });
-    card.append(check, label, text('span', `Key ${actualKeys?.[s.name] ?? s.quickKey}`, 'key'));
+    card.append(
+      check,
+      label,
+      scanState,
+      text('span', `Key ${actualKeys?.[s.name] ?? s.quickKey}`, 'key'),
+    );
     $('systems').append(card);
   }
   renderChannels();
@@ -253,7 +287,9 @@ function renderChannels() {
   for (const s of compiled.systems) {
     const details = document.createElement('details');
     details.open = true;
-    details.append(text('summary', `${s.fullName} · ${s.name}`));
+    details.append(
+      text('summary', s.fullName === s.name ? s.fullName : `${s.fullName} · ${s.name}`),
+    );
     const wrap = text('div', '', 'table-wrap'),
       table = document.createElement('table'),
       head = table.createTHead().insertRow();
@@ -267,7 +303,7 @@ function renderChannels() {
       rows++;
       const row = body.insertRow(),
         a = text('td', name);
-      a.append(text('small', label));
+      if (label !== name) a.append(text('small', label));
       row.append(a, text('td', value, 'frequency'), text('td', mode));
       const last = text('td', group);
       for (const id of refs) {
@@ -322,7 +358,7 @@ async function refreshPlans() {
     $('inbox').append(text('p', 'Agent inbox is empty. Staged plans appear here.', 'muted'));
     return;
   }
-  $('inbox').append(text('p', 'AGENT INBOX / SAVED PLANS', 'inbox-label'));
+  $('inbox').append(text('p', 'Agent inbox / saved plans', 'inbox-label'));
   for (const p of unique) {
     const row = text('div', '', 'inbox-row'),
       desc = document.createElement('div'),
